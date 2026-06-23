@@ -1,5 +1,5 @@
 import yaml from "js-yaml";
-import { SprintStatus, SprintStoryEntry, EpicStatus } from "./types";
+import { SprintStatus, SprintStoryEntry, EpicStatus, Worktree } from "./types";
 import { normalizeAlphanumericId, normalizeStoryStatus } from "./utils";
 
 function normalizeEpicStatus(raw: string | undefined): EpicStatus {
@@ -18,6 +18,35 @@ export interface SprintEpicEntry {
 export interface ParsedSprintData {
   sprintStatus: SprintStatus;
   epicStatuses: SprintEpicEntry[];
+  worktrees: Worktree[];
+}
+
+/**
+ * Parse an optional top-level `worktrees:` array from sprint-status.yaml.
+ * Each entry maps a git worktree/branch to the epic ids whose work lives in it,
+ * letting the dashboard show per-worktree progress. Returns [] when absent.
+ */
+function parseWorktrees(raw: unknown): Worktree[] {
+  if (!Array.isArray(raw)) return [];
+  const worktrees: Worktree[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const w = item as Record<string, unknown>;
+    const name = w.name != null ? String(w.name).trim() : "";
+    const branch = w.branch != null ? String(w.branch).trim() : "";
+    if (!name && !branch) continue;
+    const epics = Array.isArray(w.epics)
+      ? w.epics.map((e) => normalizeAlphanumericId(String(e))).filter(Boolean)
+      : [];
+    worktrees.push({
+      name: name || branch,
+      branch: branch || name,
+      path: w.path != null ? String(w.path) : undefined,
+      merged: w.merged === true,
+      epics,
+    });
+  }
+  return worktrees;
 }
 
 export function parseSprintStatus(content: string): ParsedSprintData | null {
@@ -100,7 +129,9 @@ export function parseSprintStatus(content: string): ParsedSprintData | null {
       stories,
     };
 
-    return { sprintStatus, epicStatuses };
+    const worktrees = parseWorktrees(data.worktrees);
+
+    return { sprintStatus, epicStatuses, worktrees };
   } catch (e) {
     console.error("Failed to parse sprint status YAML:", e);
     return null;

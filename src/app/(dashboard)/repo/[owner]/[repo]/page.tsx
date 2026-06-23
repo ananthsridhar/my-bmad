@@ -5,6 +5,7 @@ import { ProgressRing } from "@/components/shared/progress-ring";
 import { ProjectStatsGrid } from "@/components/dashboard/project-stats-grid";
 import { EpicsList } from "@/components/dashboard/epics-list";
 import { VelocityMetrics } from "@/components/dashboard/velocity-metrics";
+import { WorktreesWidget } from "@/components/dashboard/worktrees-widget";
 import { KeyArtifactsCard } from "@/components/dashboard/key-artifacts-card";
 import { GitBranch, Clock, FolderOpen } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
@@ -122,6 +123,11 @@ export default async function RepoOverviewPage({ params }: RepoPageProps) {
           <h2 className="text-lg font-semibold">Velocity Metrics</h2>
           <VelocityMetrics sprintStatus={project.sprintStatus} />
         </section>
+      )}
+
+      {/* Git worktrees */}
+      {project.worktrees.length > 0 && (
+        <WorktreesWidget worktrees={project.worktrees} epics={project.epics} />
       )}
 
       {/* Key documents */}

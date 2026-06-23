@@ -24,6 +24,19 @@ export interface SprintStoryEntry {
   epicId?: string;
 }
 
+export interface Worktree {
+  /** Human-readable label, e.g. "User Accounts". */
+  name: string;
+  /** Git branch the worktree is checked out on. */
+  branch: string;
+  /** Filesystem path of the worktree (optional). */
+  path?: string;
+  /** True when this branch has been folded into the mainline. */
+  merged: boolean;
+  /** Epic ids whose work lives in this worktree (normalized, lowercase). */
+  epics: string[];
+}
+
 export interface Epic {
   id: string;
   title: string;
@@ -109,6 +122,7 @@ export interface BmadProject {
   docsTree: FileTreeNode[];
   docsFolderName: string | null;
   parseHealth?: ParseHealthReport;
+  worktrees: Worktree[];
   totalStories: number;
   completedStories: number;
   inProgressStories: number;
