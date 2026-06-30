@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getCachedBmadProject } from "@/lib/bmad/cached-project";
 import { getGitHubToken } from "@/lib/github/client";
-import { StoryDetailView } from "@/components/epics/story-detail-view";
+import { DefectDetailView } from "@/components/defects/defect-detail-view";
 import {
   getAuthenticatedUserId,
   getAuthenticatedRepoConfig,
@@ -10,12 +10,12 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface StoryPageProps {
-  params: Promise<{ owner: string; repo: string; storyId: string }>;
+interface DefectPageProps {
+  params: Promise<{ owner: string; repo: string; defectId: string }>;
 }
 
-export default async function StoryPage({ params }: StoryPageProps) {
-  const { owner, repo: repoName, storyId } = await params;
+export default async function DefectPage({ params }: DefectPageProps) {
+  const { owner, repo: repoName, defectId } = await params;
   const userId = await getAuthenticatedUserId();
   if (!userId) redirect("/login");
 
@@ -27,29 +27,30 @@ export default async function StoryPage({ params }: StoryPageProps) {
   const project = await getCachedBmadProject(repoConfig, token, userId);
   if (!project) return notFound();
 
-  const story = project.stories.find((s) => s.id === storyId);
-  if (!story) return notFound();
+  const defect = project.defects.find((d) => d.id === defectId);
+  if (!defect) return notFound();
 
-  const storyDefects = project.defects.filter((d) => d.storyId === storyId);
-  const storiesUrl = `/repo/${owner}/${repoName}/stories`;
+  const defectsUrl = `/repo/${owner}/${repoName}/defects`;
 
   return (
     <div className="space-y-8 pb-8">
       <div className="flex items-center gap-4">
-        <Link href={storiesUrl}>
+        <Link href={defectsUrl}>
           <Button variant="ghost" size="icon" className="h-9 w-9">
             <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Back to stories</span>
+            <span className="sr-only">Back to defects</span>
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{story.title}</h1>
-          {story.epicTitle && (
-            <p className="text-muted-foreground mt-1">{story.epicTitle}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{defect.title}</h1>
+          {defect.epicId && (
+            <p className="text-muted-foreground mt-1 uppercase text-sm font-mono">
+              Epic {defect.epicId}
+            </p>
           )}
         </div>
       </div>
-      <StoryDetailView story={story} defects={storyDefects} />
+      <DefectDetailView defect={defect} />
     </div>
   );
 }
